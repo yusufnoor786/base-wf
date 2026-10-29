@@ -1,5 +1,5 @@
 
-name: Mirror Android 17 Branch
+name: Android 17 Source ZIP
 
 on:
   workflow_dispatch:
@@ -8,13 +8,15 @@ permissions:
   contents: read
 
 jobs:
-  mirror:
+  download:
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
     steps:
-      - name: Fetch Android 17 branch
+      - name: Shallow clone Android 17
         run: |
+          set -euo pipefail
+
           git clone \
             --depth=1 \
             --single-branch \
@@ -23,13 +25,44 @@ jobs:
             https://github.com/Project-Mist-OS/frameworks_base_qpr2.git \
             frameworks_base_qpr2
 
-          tar -czf frameworks_base_qpr2-17.0.tar.gz \
-            frameworks_base_qpr2/.git
-            
-      - name: Upload Git bundle
+      - name: Create source ZIP
+        run: |
+          set -euo pipefail
+
+          zip -qr frameworks_base_qpr2-17.0.zip \
+            frameworks_base_qpr2 \
+            -x 'frameworks_base_qpr2/.git/*'
+
+          ls -lh frameworks_base_qpr2-17.0.zip
+
+      - name: Upload ZIP for 24 hours
+        id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: frameworks-base-android17
-          path: frameworks_base_qpr2-17.0.bundle
+          name: frameworks_base_qpr2-android17
+          path: frameworks_base_qpr2-17.0.zip
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 1
+          compression-level: 0
+
+      - name: Show download link
+        if: success()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "## Android 17 Source ZIP"
+            echo ""
+            echo "[Open this workflow run to download the ZIP]($RUN_URL)"
+            echo ""
+            echo "- Branch: \`17.0\`"
+            echo "- Clone depth: \`1\`"
+            echo "- Artifact retention: 24 hours"
+            echo "- Git history: not included"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up runner files
+        if: always()
+        run: |
+          rm -rf frameworks_base_qpr2
+          rm -f frameworks_base_qpr2-17.0.zip
