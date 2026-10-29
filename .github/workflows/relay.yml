@@ -13,19 +13,23 @@ jobs:
     timeout-minutes: 90
 
     steps:
+      
       - name: Fetch Android 17 branch
         run: |
-          git clone --bare \
+          git clone \
+            --depth=1 \
             --single-branch \
             --branch 17.0 \
             --no-tags \
-            --depth=1 \
             https://github.com/Project-Mist-OS/frameworks_base_qpr2.git \
-            frameworks_base_qpr2.git
+            frameworks_base_qpr2
 
-          git -C frameworks_base_qpr2.git \
-            bundle create ../frameworks_base_qpr2-17.0.bundle \
-            --all
+          cd frameworks_base_qpr2
+
+          git bundle create ../frameworks_base_qpr2-17.0.bundle \
+            refs/heads/17.0
+
+          git bundle verify ../frameworks_base_qpr2-17.0.bundle
 
       - name: Upload Git bundle
         uses: actions/upload-artifact@v4
