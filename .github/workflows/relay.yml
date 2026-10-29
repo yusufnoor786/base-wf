@@ -19,6 +19,7 @@ jobs:
             --single-branch \
             --branch 17.0 \
             --no-tags \
+            --depth=1 \
             https://github.com/Project-Mist-OS/frameworks_base_qpr2.git \
             frameworks_base_qpr2.git
 
