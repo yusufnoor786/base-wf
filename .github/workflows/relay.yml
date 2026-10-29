@@ -1,0 +1,35 @@
+
+name: Mirror Android 17 Branch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Fetch Android 17 branch
+        run: |
+          git clone --bare \
+            --single-branch \
+            --branch 17.0 \
+            --no-tags \
+            https://github.com/Project-Mist-OS/frameworks_base_qpr2.git \
+            frameworks_base_qpr2.git
+
+          git -C frameworks_base_qpr2.git \
+            bundle create ../frameworks_base_qpr2-17.0.bundle \
+            --all
+
+      - name: Upload Git bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: frameworks-base-android17
+          path: frameworks_base_qpr2-17.0.bundle
+          if-no-files-found: error
+          retention-days: 3
